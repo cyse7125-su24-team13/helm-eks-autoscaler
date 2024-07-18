@@ -245,7 +245,7 @@ image:
   ##
   # image.pullSecrets -- Image pull secrets
   pullSecrets:
-  # - docker-hub-secret
+  - docker-registry-secret
 
 # kubeTargetVersionOverride -- Allow overriding the `.Capabilities.KubeVersion.GitVersion` check. Useful for `helm template` commands.
 kubeTargetVersionOverride: ""
