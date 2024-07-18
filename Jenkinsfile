@@ -63,7 +63,7 @@ pipeline {
             }
             steps {
                 script {
-                    def status = sh(script: "helm lint charts/cve-processor", returnStatus: true)
+                    def status = sh(script: "helm lint cluster-autoscaler/", returnStatus: true)
                     if (status != 0) {
                         error "Helm lint failed"
                     } else {
@@ -81,7 +81,7 @@ pipeline {
             }
             steps {
                 script {
-                    def status = sh(script: "helm template charts/cve-processor", returnStatus: true)
+                    def status = sh(script: "helm template cluster-autoscaler/", returnStatus: true)
                     if (status != 0) {
                         error "Helm template failed"
                     } else {
