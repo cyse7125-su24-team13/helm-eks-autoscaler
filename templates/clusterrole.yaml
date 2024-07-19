@@ -138,6 +138,14 @@ rules:
     verbs:
     - get
     - update
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
 {{- if .Values.rbac.pspEnabled }}
   - apiGroups:
     - extensions

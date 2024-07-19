@@ -84,4 +84,12 @@ rules:
     - get
     - update
 {{- end }}
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
 {{- end -}}
