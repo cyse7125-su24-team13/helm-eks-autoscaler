@@ -5,6 +5,8 @@ pipeline {
         GITHUB_REPO = 'cyse7125-su24-team13/helm-eks-autoscaler'
         GITHUB_API_URL = 'https://api.github.com'
         NODE_VERSION = '20' // Specify the Node.js version you want to install
+        DOCKER_REPO = 'rahhul1309/cluster-autoscaler'
+        REGISTRY_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
@@ -114,6 +116,8 @@ pipeline {
                                 @semantic-release/exec@latest --legacy-peer-deps
                 '''
             }
+
+            
         }
 
         stage('Semantic Release') {
@@ -134,6 +138,59 @@ pipeline {
                         echo "No new version found from semantic-release."
                         env.NEW_VERSION = null
                     }
+                }
+            }
+        }
+stage('Login to Docker Hub') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { return env.NEW_VERSION != null && env.NEW_VERSION != "null" }
+                }
+            }
+            steps {
+                script {
+                    // Using credentials to login to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                    }
+                }
+            }
+        }
+        stage('Build and Push Docker Image') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { return env.NEW_VERSION != null && env.NEW_VERSION != "null" }
+                }
+            }
+            steps {
+                script {
+                    // Assuming Docker and Docker Buildx are configured on the Jenkins agent
+                    def builderExists = sh(script: "docker buildx ls | grep mybuilder", returnStatus: true) == 0
+            
+                    if (builderExists) {
+                        sh "docker buildx rm mybuilder"
+                    }
+            
+                    sh "export DOCKER_CLI_EXPERIMENTAL=enabled"
+                    sh "docker buildx create --use --name mybuilder"
+                    sh "docker buildx inspect --bootstrap"
+                    sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${env.DOCKER_REPO}:v${env.NEW_VERSION} . --push"
+                }
+            }
+
+        }
+        stage('Cleanup') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { return env.NEW_VERSION != null && env.NEW_VERSION != "null" }
+                }
+            }
+            steps {
+                script {
+                    sh "docker buildx rm mybuilder"
                 }
             }
         }
